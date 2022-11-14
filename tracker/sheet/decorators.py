@@ -11,7 +11,7 @@ def check_ownership(func):
 
     @wraps(func)
     def wrapper(view, request, *args, **kwargs):
-        if kwargs["pk"] in [sheet.id for sheet in request.user.sheets.all()]:
+        if kwargs["pk"] in request.user.sheets.values_list('id', flat=True):
             return func(view, request, *args, **kwargs)
         else:
             return Response(

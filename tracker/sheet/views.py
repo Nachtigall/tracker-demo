@@ -19,8 +19,7 @@ class SheetView(APIView):
         """
         List all sheets of all users of projects user belongs to.
         """
-        user_projects = [project.id for project in request.user.projects.all()]
-        sheets = Sheet.objects.filter(project_id__in=user_projects)
+        sheets = Sheet.objects.filter(project_id__in=request.user.projects.values_list('id', flat=True))
         serializer = SheetSerializer(sheets, many=True)
         return Response(serializer.data)
 
@@ -32,7 +31,7 @@ class SheetView(APIView):
         if serializer.is_valid():
             if int(request.data["user"]) == request.user.id and int(
                 request.data["project"]
-            ) in [project.id for project in request.user.projects.all()]:
+            ) in request.user.projects.values_list('id', flat=True):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(
@@ -48,8 +47,7 @@ class SheetDetailsView(APIView):
     http_method_names = ["delete", "get", "patch"]
 
     def get_object(self, pk, request):
-        user_projects = [project.id for project in request.user.projects.all()]
-        return get_object_or_404(Sheet, pk=pk, project_id__in=user_projects)
+        return get_object_or_404(Sheet, pk=pk, project_id__in=request.user.projects.values_list('id', flat=True))
 
     def get(self, request, pk):
         """
